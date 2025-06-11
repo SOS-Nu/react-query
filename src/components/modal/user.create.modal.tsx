@@ -5,6 +5,7 @@ import Form from "react-bootstrap/Form";
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
+import { QUERY_KEY } from "../../config/key";
 export interface IUser {
   id?: number;
   name: string;
@@ -40,7 +41,7 @@ const UserCreateModal = (props: any) => {
       setEmail("");
       setName("");
       queryClient.invalidateQueries({
-        queryKey: ["fetchUsers", currentPage],
+        queryKey: QUERY_KEY.getAllUser(),
       });
     },
   });

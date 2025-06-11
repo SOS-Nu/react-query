@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
 import { toast } from "react-toastify";
+import { QUERY_KEY } from "../../config/key";
 
 const UserDeleteModal = (props: any) => {
   const {
@@ -28,7 +29,7 @@ const UserDeleteModal = (props: any) => {
       // Boom baby!
       toast("🦄 Wow so easy! delete user");
       queryClient.invalidateQueries({
-        queryKey: ["fetchUsers"],
+        queryKey: QUERY_KEY.getAllUser(),
       });
     },
   });

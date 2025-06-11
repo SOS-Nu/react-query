@@ -9,6 +9,9 @@ import OverlayTrigger from "react-bootstrap/OverlayTrigger";
 import Popover from "react-bootstrap/Popover";
 import { useQuery, keepPreviousData, useMutation } from "@tanstack/react-query";
 import { Spinner } from "react-bootstrap";
+import { calculatePagesCount } from "../helper/constant";
+import { QUERY_KEY } from "../config/key";
+import { PAGE_SIZE, useFetchUser } from "../config/fetch";
 
 interface IUser {
   id?: number;
@@ -24,12 +27,10 @@ function UsersTable() {
 
   const [isOpenDeleteModal, setIsOpenDeleteModal] = useState<boolean>(false);
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [totalPages, setTotalPages] = useState<number>(1);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [loadingDeleteIds, setLoadingDeleteIds] = useState<{
     [key: number]: boolean;
   }>({}); // Theo dõi loading cho từng ID
-  const PAGE_SIZE = 9;
 
   const handleEditUser = (user: any) => {
     setDataUser(user);
@@ -74,21 +75,11 @@ function UsersTable() {
     isPending,
     error,
     data: users,
-  } = useQuery({
-    queryKey: ["fetchUsers", currentPage],
-    queryFn: (): Promise<IUser[]> =>
-      fetch(
-        `http://localhost:8000/users?_page=${currentPage}&_limit=${PAGE_SIZE}`
-      ).then((res) => {
-        const total_items = +(res.headers.get("X-Total-Count") ?? 0);
-
-        const total_pages =
-          total_items == 0 ? 1 : Math.ceil(total_items / PAGE_SIZE);
-        setTotalPages(total_pages);
-        return res.json();
-      }),
-    placeholderData: keepPreviousData,
-  });
+    totalPages,
+  } = useFetchUser(currentPage);
+  console.log("checkk totalPages", totalPages);
+  //cac bien ở trên là lấy ra sau khi kết quả của hàm useFetchuser chạy chứ không phải là tham số đầu vòa
+  //đây là cú pháp destructuring
 
   if (isPending) return "Loading...";
 
@@ -154,7 +145,7 @@ function UsersTable() {
                 <td>
                   <Button
                     variant="warning"
-                    onClick={() => handleEditusers(users)}
+                    onClick={() => handleEditUser(users)}
                   >
                     Edit
                   </Button>
