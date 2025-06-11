@@ -7,10 +7,11 @@ import UserDeleteModal from "./modal/user.delete.modal";
 import UsersPagination from "./pagination/users.pagination";
 import OverlayTrigger from "react-bootstrap/OverlayTrigger";
 import Popover from "react-bootstrap/Popover";
-import { useQuery, keepPreviousData } from "@tanstack/react-query";
+import { useQuery, keepPreviousData, useMutation } from "@tanstack/react-query";
+import { Spinner } from "react-bootstrap";
 
 interface IUser {
-  id: number;
+  id?: number;
   name: string;
   email: string;
 }
@@ -24,7 +25,11 @@ function UsersTable() {
   const [isOpenDeleteModal, setIsOpenDeleteModal] = useState<boolean>(false);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
-  const PAGE_SIZE = 5;
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [loadingDeleteIds, setLoadingDeleteIds] = useState<{
+    [key: number]: boolean;
+  }>({}); // Theo dõi loading cho từng ID
+  const PAGE_SIZE = 9;
 
   const handleEditUser = (user: any) => {
     setDataUser(user);
@@ -99,8 +104,25 @@ function UsersTable() {
         }}
       >
         <h4>Table Users</h4>
-        <Button variant="primary" onClick={() => setIsOpenCreateModal(true)}>
-          Add New
+        <Button
+          variant="primary"
+          onClick={() => setIsOpenCreateModal(true)}
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <>
+              <Spinner
+                as="span"
+                animation="border"
+                size="sm"
+                role="status"
+                aria-hidden="true"
+              />
+              <span> Add New</span>
+            </>
+          ) : (
+            "Add New"
+          )}
         </Button>
       </div>
       <Table striped bordered hover>
@@ -113,33 +135,50 @@ function UsersTable() {
           </tr>
         </thead>
         <tbody>
-          {users?.map((user) => {
+          {users?.map((users) => {
             return (
-              <tr key={user.id}>
+              <tr key={users.id}>
                 <OverlayTrigger
                   trigger="click"
                   placement="right"
                   rootClose
-                  overlay={<PopoverComponent id={user.id} />}
+                  overlay={<PopoverComponent id={users.id} />}
                 >
                   <td>
-                    <a href="#">{user.id}</a>
+                    <a href="#">{users.id}</a>
                   </td>
                 </OverlayTrigger>
 
-                <td>{user.name}</td>
-                <td>{user.email}</td>
+                <td>{users.name}</td>
+                <td>{users.email}</td>
                 <td>
                   <Button
                     variant="warning"
-                    onClick={() => handleEditUser(user)}
+                    onClick={() => handleEditusers(users)}
                   >
                     Edit
                   </Button>
                   &nbsp;&nbsp;&nbsp;
-                  <Button variant="danger" onClick={() => handleDelete(user)}>
-                    Delete
-                  </Button>
+                  {loadingDeleteIds[users?.id] ? (
+                    <>
+                      <Spinner
+                        as="span"
+                        animation="border"
+                        size="sm"
+                        role="status"
+                        aria-hidden="true"
+                        variant="danger"
+                      />
+                      <span> Delete</span>
+                    </>
+                  ) : (
+                    <Button
+                      variant="danger"
+                      onClick={() => handleDelete(users)}
+                    >
+                      Delete
+                    </Button>
+                  )}
                 </td>
               </tr>
             );
@@ -152,8 +191,11 @@ function UsersTable() {
         setCurrentPage={setCurrentPage}
       />
       <UserCreateModal
+        isLoading={isLoading}
+        setIsLoading={setIsLoading}
         isOpenCreateModal={isOpenCreateModal}
         setIsOpenCreateModal={setIsOpenCreateModal}
+        currentPage={currentPage}
       />
 
       <UserEditModal
@@ -163,6 +205,8 @@ function UsersTable() {
       />
 
       <UserDeleteModal
+        setLoadingDeleteIds={setLoadingDeleteIds} // Truyền hàm để cập nhật loading
+        loadingDeleteIds={loadingDeleteIds} // Truyền trạng thái loading
         dataUser={dataUser}
         isOpenDeleteModal={isOpenDeleteModal}
         setIsOpenDeleteModal={setIsOpenDeleteModal}
